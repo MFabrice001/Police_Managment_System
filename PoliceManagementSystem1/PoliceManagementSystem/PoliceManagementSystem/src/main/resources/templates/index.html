@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE-edge">
+    <meta name="viewport" content="width=device-width, intial-scale=1.0">
+    <title>RNP |Home Page</title>
+    <link rel="stylesheet" href="/css/style.css"/>
+    <!--fav-icon-->
+    <link rel="shortcut icon" href="/images/RNP_fav.png"/>
+</head>
+<body>
+<!-- Logo Header -->
+<div class="top-nav">
+    <div class="logo-container">
+        <img src="/images/coat.png" alt="RNP Arsenal Logo">
+    </div>
+    <div>
+        <h1 style="color: white; letter-spacing: 3px;">Rwanda National Police</h1>
+        <p style="color: white; letter-spacing: 4px;">Service - Protection - Integrity</p>
+    </div>
+    <div class="logo-container">
+        <img src="/images/RNP_LOGO.png" alt="RNP Arsenal Logo">
+    </div>
+</div>
+<section class="main" style="background-image: url(/images/off.jpg);">
+    <nav>
+        <input class="menu-btn" type="checkbox" id="menu-btn"/>
+        <label class="menu-icon" for="menu-btn">
+            <span class="nav-icon"></span>
+        </label>
+        <ul class="menu" style="border-radius: 5px;">
+            <li><a th:href="@{/index}">Home</a></li>
+            <li><a th:href="@{/search}">Search</a></li>
+            <li><a class="active" th:href="@{/polices}" onclick="document.getElementById('id01').style.display='block'" style="width:auto; border-radius: 5px; cursor: pointer;">Login</a></li>
+        </ul>
+    </nav>
+</section>
+<!--main-content-->
+<div class="home-content">
+
+    <!--text-->
+    <div class="home-text" >
+        <h3 style="color: white; letter-spacing: 3px;" >Rwanda National Police</h3>
+        <h1 style="color: white;"> Arsenal Portal</h1>
+        <p style="color: white;">Rwanda National Police was established in 2000, our powers and responsibilities are prescribed under a legislative framework.
+
+            Rwanda National Police is responsible for ensuring 24 hours a day, seven days a week,
+            the safety and security of persons and property on the entire territory of the Republic of Rwanda.</p>
+        <!--login-btn-->
+        <a href="#" class="main-login" style="border-radius: 5px;">Login</a>
+    </div>
+    <!--img-->
+    <div class="home-img" style="width: 500px;">
+        <img src="/images/ttt.png" width="500px" style="text-shadow: 20px 22px;" alt=""/>
+    </div>
+
+</div>
+
+<!--arrow-->
+<div class="arrow"></div>
+<span class="scroll">Scroll</span>
+
+    <!--footer------------->
+    <div class="footer-top-banner" style="background: url('/images/footer-top.png') repeat-x;"></div>
+
+    <footer>
+        <div class="copyright">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="copyright" style="background-color: #11234b; padding: 20px; text-align: center;">
+                            <p style="color: #fff;">Copyright (C) - 2023 | Developed By Kayiranga </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Get the modal
+        var modal = document.getElementById('id01');
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+
+</body>
+
+</html>
