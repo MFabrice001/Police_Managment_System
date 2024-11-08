@@ -201,6 +201,6 @@ public class User {
 
     // Check if the user has a specific role
     public boolean hasRole(String roleName) {
-        return roles.stream().anyMatch(role -> role.getName().equals(roleName));
+        return roles.stream().anyMatch(role -> role.getRoleName().equals(roleName)); // Use role.getRoleName()
     }
 }

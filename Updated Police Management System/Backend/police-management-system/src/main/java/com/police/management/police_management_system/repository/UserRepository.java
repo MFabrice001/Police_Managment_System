@@ -38,5 +38,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @param roleName the name of the role to search for
      * @return a list of User entities associated with the specified role name
      */
-    List<User> findByRoles_Name(String roleName);
+    List<User> findByRoles_RoleName(String roleName); // Updated method
 }

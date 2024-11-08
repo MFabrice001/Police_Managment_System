@@ -13,15 +13,15 @@ public class Role {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String name;
+    private String roleName; // Ensure this matches the repository query
 
     @ManyToMany(mappedBy = "roles")
-    private Set<User> users = new HashSet<>(); // Initialize with an empty set
+    private Set<User> users = new HashSet<>();
 
     public Role() {}
 
-    public Role(String name) {
-        this.name = name;
+    public Role(String roleName) {
+        this.roleName = roleName;
     }
 
     // Getters and Setters
@@ -33,12 +33,12 @@ public class Role {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getRoleName() {
+        return roleName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
     }
 
     public Set<User> getUsers() {
@@ -49,17 +49,11 @@ public class Role {
         this.users = users;
     }
 
-    // Alias for getName(), used by UserService to access the role name
-    public String getRoleName() {
-        return getName();
-    }
-
-    // toString method for better logging and debugging
     @Override
     public String toString() {
         return "Role{" +
                 "id=" + id +
-                ", name='" + name + '\'' +
+                ", roleName='" + roleName + '\'' +
                 '}';
     }
 }
