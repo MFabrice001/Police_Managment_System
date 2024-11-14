@@ -1,6 +1,6 @@
 package com.police.management.police_management_system.repository;
 
-import com.police.management.police_management_system.entity.PasswordResetToken;
+import com.police.management.police_management_system.model.ResetToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PasswordResetTokenRepository extends JpaRepository<PasswordResetToken, Long> {
+public interface PasswordResetTokenRepository extends JpaRepository<ResetToken, Long> {
 
     /**
      * Finds a password reset token by its token value.
@@ -19,7 +19,7 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
      * @param token the token string to search for
      * @return an optional password reset token
      */
-    Optional<PasswordResetToken> findByToken(String token);
+    Optional<ResetToken> findByToken(String token);
 
     /**
      * Finds expired password reset tokens based on the expiry date.
@@ -27,7 +27,7 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
      * @param now the current date-time for comparison
      * @return a list of expired password reset tokens
      */
-    List<PasswordResetToken> findByExpiryDateBefore(LocalDateTime now);
+    List<ResetToken> findByExpiryDateBefore(LocalDateTime now);
 
     /**
      * Finds password reset tokens by the email associated with the user.
@@ -36,5 +36,5 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
      * @return a list of password reset tokens for the specified email
      */
     @Query("SELECT p FROM PasswordResetToken p WHERE p.user.email = :email")
-    List<PasswordResetToken> findByUserEmail(@Param("email") String email);
+    List<ResetToken> findByUserEmail(@Param("email") String email);
 }

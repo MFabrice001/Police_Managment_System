@@ -1,4 +1,4 @@
-package com.police.management.police_management_system.entity;
+package com.police.management.police_management_system.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;

@@ -1,7 +1,5 @@
 package com.police.management.police_management_system.controller;
 
-import com.police.management.police_management_system.entity.CrimeReport;
-import com.police.management.police_management_system.service.AdminService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
