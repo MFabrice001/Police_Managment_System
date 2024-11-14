@@ -1,125 +1,183 @@
 package com.police.management.police_management_system.service;
 
-import com.police.management.police_management_system.entity.Role;
-import com.police.management.police_management_system.entity.User;
+import com.police.management.police_management_system.model.ResetToken;
+import com.police.management.police_management_system.model.Role;
+import com.police.management.police_management_system.model.User;
+import com.police.management.police_management_system.repository.ResetTokenRepository;
 import com.police.management.police_management_system.repository.UserRepository;
-import com.police.management.police_management_system.repository.RoleRepository;
-import jakarta.validation.Valid;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.HashSet;
+import jakarta.servlet.http.HttpSession;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 @Service
-public class UserService implements UserDetailsService {
+public class UserService {
 
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
-    private RoleRepository roleRepository;
+    private ResetTokenRepository resetTokenRepository;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    private JavaMailSender mailSender;
 
-    public void saveUser(@Valid User user, String roleName) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+    @Autowired
+    private HttpSession session; // Injecting HttpSession for session management
 
-        Optional<Role> roleOptional = roleRepository.findByRoleName(roleName);
-        if (roleOptional.isPresent()) {
-            user.getRoles().add(roleOptional.get());
-        } else {
-            throw new RuntimeException("Role not found: " + roleName); // Handle role not found scenario
-        }
-
-        userRepository.save(user);
+    // Automatically add an admin user on application startup
+    @PostConstruct
+    public void init() {
+        addAdminUser(); // Ensure admin user exists in the system
     }
 
-    public User authenticate(String username, String password) {
-        User user = userRepository.findByUsername(username);
-        if (user != null && passwordEncoder.matches(password, user.getPassword())) {
-            return user;
-        }
-        return null;
-    }
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username);
+    @Transactional
+    public boolean sendPasswordResetEmail(String email) {
+        User user = userRepository.findByEmail(email);
         if (user == null) {
-            throw new UsernameNotFoundException("User not found");
+            return false; // User not found
         }
 
-        List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRoleName()))
-                .collect(Collectors.toList());
+        deleteExistingResetTokenByEmail(email);
 
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), authorities);
+        String token = UUID.randomUUID().toString();
+        saveResetTokenForUser(user, token);
+
+        String resetUrl = "http://localhost:8080/reset-password?token=" + token;
+        String message = "To reset your password, click the link below:\n" + resetUrl;
+        sendEmail(email, "Password Reset", message);
+
+        return true;
     }
 
-    public void processForgotPassword(String email) {
-        // Placeholder for forgot password implementation
+    private void saveResetTokenForUser(User user, String token) {
+        ResetToken resetToken = new ResetToken();
+        resetToken.setToken(token);
+        resetToken.setUser(user);
+        resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(15));
+        resetTokenRepository.save(resetToken);
+    }
+
+    @Transactional
+    public void deleteExistingResetTokenByEmail(String email) {
+        User user = userRepository.findByEmail(email);
+        if (user != null) {
+            resetTokenRepository.findByUser(user).ifPresent(resetToken -> {
+                resetTokenRepository.delete(resetToken);
+            });
+        }
+    }
+
+    private void sendEmail(String to, String subject, String body) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject(subject);
+        message.setText(body);
+        mailSender.send(message);
+    }
+
+    public boolean doesEmailExist(String email) {
+        return userRepository.findByEmail(email) != null;
+    }
+
+    @Transactional
+    public User registerUser(User user) {
+        return userRepository.save(user);
+    }
+
+    public Optional<User> findUserByResetToken(String token) {
+        return resetTokenRepository.findByToken(token)
+                .map(ResetToken::getUser);
     }
 
     public boolean validatePasswordResetToken(String token) {
-        // Placeholder for token validation logic
-        return false;
+        Optional<ResetToken> resetTokenOptional = resetTokenRepository.findByToken(token);
+        return resetTokenOptional.isPresent() && resetTokenOptional.get().getExpiryDate().isAfter(LocalDateTime.now());
     }
 
-    public void updatePassword(String token, String newPassword) {
-        User user = userRepository.findByResetToken(token);
+    @Transactional
+    public boolean resetUserPassword(String token, String newPassword) {
+        if (!validatePasswordResetToken(token)) {
+            return false;
+        }
+
+        Optional<User> userOptional = findUserByResetToken(token);
+        if (!userOptional.isPresent()) {
+            return false;
+        }
+
+        User user = userOptional.get();
+        user.setPassword(newPassword);
+        userRepository.save(user);
+
+        resetTokenRepository.deleteByToken(token);
+
+        return true;
+    }
+
+    public void addAdminUser() {
+        if (userRepository.findByUsername("admin") == null) {
+            User adminUser = new User();
+            adminUser.setUsername("admin");
+            adminUser.setPassword("admin");
+            adminUser.setEmail("admin@police.com");
+            adminUser.setRole(Role.ROLE_ADMIN);
+
+            userRepository.save(adminUser);
+        }
+    }
+
+    @Transactional
+    public void updateUser(User user) {
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+    public List<User> searchUsers(String username, String email) {
+        return userRepository.findByUsernameContainingOrEmailContaining(username, email);
+    }
+
+    @Transactional
+    public void saveAll(List<User> userList) {
+        userRepository.saveAll(userList);
+    }
+
+    public Page<User> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable);
+    }
+
+    public User loginUser(String username) {
+        User user = userRepository.findByUsername(username);
         if (user != null) {
-            user.setPassword(passwordEncoder.encode(newPassword));
-            user.setResetToken(null);
-            userRepository.save(user);
-        } else {
-            throw new IllegalArgumentException("Invalid token");
+            session.setAttribute("loggedInUser", user);
         }
+        return user;
     }
 
-    public User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return null;
-        }
-
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof UserDetails) {
-            String username = ((UserDetails) principal).getUsername();
-            return userRepository.findByUsername(username);
-        }
-
-        return null;
-    }
-
-    public void updateUserProfile(User updatedUser) {
-        // Fetch the current user from the database
-        Optional<User> existingUserOptional = userRepository.findById(updatedUser.getId());
-
-        if (existingUserOptional.isPresent()) {
-            User existingUser = existingUserOptional.get();
-
-            // Update the fields as necessary
-            existingUser.setUsername(updatedUser.getUsername());
-            existingUser.setEmail(updatedUser.getEmail());
-            existingUser.setPassword(updatedUser.getPassword()); // Consider hashing the password
-            // Update additional fields like address, phone number if applicable
-
-            // Save the updated user back to the database
-            userRepository.save(existingUser);
-        } else {
-            throw new RuntimeException("User not found"); // Handle the user not found scenario as appropriate
-        }
+    public User getUserById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
     }
 }

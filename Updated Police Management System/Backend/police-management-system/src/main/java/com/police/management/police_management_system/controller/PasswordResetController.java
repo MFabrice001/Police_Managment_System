@@ -2,92 +2,83 @@ package com.police.management.police_management_system.controller;
 
 import com.police.management.police_management_system.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import javax.servlet.http.HttpServletRequest;
-import java.util.Locale;
-
-@RestController
-@RequestMapping("/api/auth")
+@Controller
 public class PasswordResetController {
 
-    private static final Logger logger = LoggerFactory.getLogger(PasswordResetController.class);
-
-    private final UserService userService;
-    private final MessageSource messageSource;
-
     @Autowired
-    public PasswordResetController(UserService userService, MessageSource messageSource) {
-        this.userService = userService;
-        this.messageSource = messageSource;
+    private UserService userService;
+
+    // Display the Forgot Password form
+    @GetMapping("/forgot-password")
+    public String showForgotPasswordForm() {
+        return "forgot-password"; // Renders the forgot password page
     }
 
-    // Endpoint to request password reset
+    // Handle Forgot Password request
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestParam String email, HttpServletRequest request) {
-        Locale locale = request.getLocale();
-        try {
-            userService.processForgotPassword(email);
-            String successMessage = messageSource.getMessage("password.reset.success", null, locale);
-            logger.info("Password reset request successful for email: {}", email);
-            return ResponseEntity.ok(successMessage);
-        } catch (Exception e) {
-            logger.error("Error processing password reset for email: {}", email, e);
-            String failureMessage = messageSource.getMessage("error.not.found", null, locale);
-            return ResponseEntity.status(400).body(failureMessage);
+    public String handleForgotPassword(@RequestParam("email") String email, Model model) {
+        // Check if the user's email exists in the system
+        if (!userService.doesEmailExist(email)) {
+            model.addAttribute("error", "Email address not found.");
+            return "forgot-password"; // Return to the forgot password page with an error
         }
+
+        // Delete any existing password reset token for the email
+        userService.deleteExistingResetTokenByEmail(email);
+
+        // Generate a password reset token and send an email
+        boolean emailSent = userService.sendPasswordResetEmail(email);
+
+        if (emailSent) {
+            model.addAttribute("message", "A reset link has been sent to your email.");
+        } else {
+            model.addAttribute("error", "Failed to send email. Please try again.");
+        }
+
+        return "forgot-password"; // Return to the forgot password page with a message or error
     }
 
-    // Endpoint to confirm password reset token
-    @GetMapping("/confirm-reset")
-    public ResponseEntity<String> confirmPasswordReset(@RequestParam String token, HttpServletRequest request) {
-        Locale locale = request.getLocale();
-        try {
-            boolean isValid = userService.validatePasswordResetToken(token);
-            if (isValid) {
-                String validMessage = messageSource.getMessage("token.valid", null, locale);
-                logger.info("Token validation successful for token: {}", token);
-                return ResponseEntity.ok(validMessage);
-            } else {
-                String invalidMessage = messageSource.getMessage("token.invalid.or.expired", null, locale);
-                logger.warn("Invalid or expired token: {}", token);
-                return ResponseEntity.status(404).body(invalidMessage);
-            }
-        } catch (Exception e) {
-            logger.error("Error validating token: {}", token, e);
-            String errorMessage = messageSource.getMessage("token.validation.error", null, locale);
-            return ResponseEntity.status(500).body(errorMessage);
+    // Display the Password Reset form
+    @GetMapping("/reset-password")
+    public String showResetPasswordForm(@RequestParam("token") String token, Model model) {
+        boolean isValidToken = userService.validatePasswordResetToken(token);
+
+        if (!isValidToken) {
+            model.addAttribute("error", "Invalid or expired password reset token.");
+            return "forgot-password"; // Redirect to forgot password page if the token is invalid
         }
+
+        model.addAttribute("token", token); // Pass the token to the form
+        return "reset-password"; // Render the reset password page
     }
 
-    // Endpoint to reset password after token validation
+    // Handle Password Reset form submission
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(
-            @RequestParam String token,
-            @RequestParam String newPassword,
-            HttpServletRequest request) {
+    public String handlePasswordReset(@RequestParam("token") String token,
+                                      @RequestParam("newPassword") String newPassword,
+                                      @RequestParam("confirmNewPassword") String confirmNewPassword,
+                                      Model model) {
+        // Ensure the new passwords match
+        if (!newPassword.equals(confirmNewPassword)) {
+            model.addAttribute("error", "Passwords do not match. Please try again.");
+            return "reset-password"; // Show reset password page again with an error
+        }
 
-        Locale locale = request.getLocale();
-        try {
-            boolean isValid = userService.validatePasswordResetToken(token);
-            if (isValid) {
-                userService.updatePassword(token, newPassword);
-                String successMessage = messageSource.getMessage("password.reset.success", null, locale);
-                logger.info("Password reset successful for token: {}", token);
-                return ResponseEntity.ok(successMessage);
-            } else {
-                String failureMessage = messageSource.getMessage("token.invalid.or.expired", null, locale);
-                logger.warn("Attempt to reset password with invalid or expired token: {}", token);
-                return ResponseEntity.status(404).body(failureMessage);
-            }
-        } catch (Exception e) {
-            logger.error("Error resetting password for token: {}", token, e);
-            String errorMessage = messageSource.getMessage("password.reset.error", null, locale);
-            return ResponseEntity.status(500).body(errorMessage);
+        // Attempt to reset the password using the token
+        boolean isResetSuccessful = userService.resetUserPassword(token, newPassword);
+
+        if (isResetSuccessful) {
+            model.addAttribute("message", "Your password has been successfully reset. You can now log in.");
+            return "login"; // Redirect to the login page upon success
+        } else {
+            model.addAttribute("error", "Failed to reset password. Please try again.");
+            return "reset-password"; // Show reset password page again with an error
         }
     }
 }

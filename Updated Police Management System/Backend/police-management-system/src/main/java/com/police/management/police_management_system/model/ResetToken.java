@@ -4,29 +4,28 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-public class PasswordResetToken {
+public class ResetToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String token;
+    private String token; // Unique reset token
 
-    @Column(nullable = false)
-    private LocalDateTime expiryDate;
+    @OneToOne(targetEntity = User.class, fetch = FetchType.EAGER)
+    @JoinColumn(nullable = false, name = "user_id")
+    private User user; // Associated user for the reset token
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private LocalDateTime expiryDate; // Expiry date for the reset token
 
-    // Constructors
-    public PasswordResetToken() {}
+    // Default constructor
+    public ResetToken() {}
 
-    public PasswordResetToken(String token, LocalDateTime expiryDate, User user) {
+    // Parameterized constructor to create a token with a specified expiry time
+    public ResetToken(String token, User user, int expiryMinutes) {
         this.token = token;
-        this.expiryDate = expiryDate;
         this.user = user;
+        this.expiryDate = LocalDateTime.now().plusMinutes(expiryMinutes); // Set expiry date based on current time + expiry minutes
     }
 
     // Getters and Setters
@@ -46,14 +45,6 @@ public class PasswordResetToken {
         this.token = token;
     }
 
-    public LocalDateTime getExpiryDate() {
-        return expiryDate;
-    }
-
-    public void setExpiryDate(LocalDateTime expiryDate) {
-        this.expiryDate = expiryDate;
-    }
-
     public User getUser() {
         return user;
     }
@@ -62,8 +53,16 @@ public class PasswordResetToken {
         this.user = user;
     }
 
-    // Utility method to check if the token has expired
+    public LocalDateTime getExpiryDate() {
+        return expiryDate;
+    }
+
+    public void setExpiryDate(LocalDateTime expiryDate) {
+        this.expiryDate = expiryDate;
+    }
+
+    // Method to check if the token is expired
     public boolean isExpired() {
-        return LocalDateTime.now().isAfter(this.expiryDate);
+        return LocalDateTime.now().isAfter(expiryDate);
     }
 }

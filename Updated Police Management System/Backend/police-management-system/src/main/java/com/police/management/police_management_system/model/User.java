@@ -1,83 +1,29 @@
-package com.police.management.police_management_system.entity;
+package com.police.management.police_management_system.model;
 
-import com.police.management.police_management_system.Model.AuditListener;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "users")
-@EntityListeners(AuditListener.class)
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
     private String username;
-
-    @Column(nullable = false, unique = true)
-    private String email;
-
-    @Column(nullable = false)
     private String password;
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private Set<Role> roles = new HashSet<>();
-
-    @Column(name = "reset_token")
-    private String resetToken;
-
-    @Column(name = "phone_number")
+    private String email;
     private String phoneNumber;
+    private String firstName;
+    private String lastName;
+    private String address; // Added field for address as per profile management requirements
+    private String profilePicture;
 
-    @Column(name = "address")
-    private String address;
+    // Custom Role enum for user roles
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", length = 20)
+    private Role role;
 
-    @Column(name = "profile_picture_url")
-    private String profilePictureUrl;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<CrimeReport> crimeReports = new HashSet<>();
-
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    // Default constructor
-    public User() {}
-
-    // Constructor with basic details
-    public User(String username, String email, String password) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-    }
-
-    // Constructor with ID and roles
-    public User(Long id, String username, String email, String password, Set<Role> roles) {
-        this.id = id;
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.roles = roles;
-    }
-
-    // Constructor for import/export needs (ID, username, email only)
-    public User(Long id, String username, String email) {
-        this.id = id;
-        this.username = username;
-        this.email = email;
-    }
+    private String resetToken;
 
     // Getters and setters
 
@@ -97,14 +43,6 @@ public class User {
         this.username = username;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public String getPassword() {
         return password;
     }
@@ -113,20 +51,12 @@ public class User {
         this.password = password;
     }
 
-    public Set<Role> getRoles() {
-        return roles;
+    public String getEmail() {
+        return email;
     }
 
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
-    }
-
-    public String getResetToken() {
-        return resetToken;
-    }
-
-    public void setResetToken(String resetToken) {
-        this.resetToken = resetToken;
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getPhoneNumber() {
@@ -137,6 +67,22 @@ public class User {
         this.phoneNumber = phoneNumber;
     }
 
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
     public String getAddress() {
         return address;
     }
@@ -145,62 +91,27 @@ public class User {
         this.address = address;
     }
 
-    public String getProfilePictureUrl() {
-        return profilePictureUrl;
+    public String getProfilePicture() {
+        return profilePicture;
     }
 
-    public void setProfilePictureUrl(String profilePictureUrl) {
-        this.profilePictureUrl = profilePictureUrl;
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
     }
 
-    public Set<CrimeReport> getCrimeReports() {
-        return crimeReports;
+    public Role getRole() {
+        return role;
     }
 
-    public void setCrimeReports(Set<CrimeReport> crimeReports) {
-        this.crimeReports = crimeReports;
+    public void setRole(Role role) {
+        this.role = role;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public String getResetToken() {
+        return resetToken;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    // Automatic timestamp management
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
-    // Override toString for debugging
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", username='" + username + '\'' +
-                ", email='" + email + '\'' +
-                ", roles=" + roles +
-                '}';
-    }
-
-    // Check if the user has a specific role
-    public boolean hasRole(String roleName) {
-        return roles.stream().anyMatch(role -> role.getRoleName().equals(roleName)); // Use role.getRoleName()
+    public void setResetToken(String resetToken) {
+        this.resetToken = resetToken;
     }
 }
