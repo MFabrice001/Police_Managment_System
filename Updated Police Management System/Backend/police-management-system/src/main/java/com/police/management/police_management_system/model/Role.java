@@ -4,5 +4,5 @@ public enum Role {
     ROLE_ADMIN,
     ROLE_STAFF,
     ROLE_CITIZEN,
-    ROLE_POLICE_STAFF
+    //ROLE_POLICE_STAFF
 }
