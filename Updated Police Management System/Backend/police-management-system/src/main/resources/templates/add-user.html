@@ -1,0 +1,184 @@
+<!DOCTYPE HTML>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <title>Add New User</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Page Background */
+        body {
+          background-color: #1a1a1a;
+          color: #e0e0e0;
+          font-family: 'Roboto', sans-serif;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          margin: 0;
+          padding: 20px;
+        }
+
+        /* Card and Sidebar Layout */
+        .container {
+          display: flex;
+          width: 90%;
+          max-width: 900px;
+          border-radius: 15px;
+          overflow: hidden;
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
+        }
+
+        .sidebar {
+          background-color: #0e3d3e; /* Emerald Green */
+          color: #ffffff;
+          padding: 30px 20px;
+          width: 35%;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .sidebar h2 {
+          font-weight: 700;
+          margin-bottom: 10px;
+          text-align: center;
+        }
+
+        .sidebar p {
+          font-size: 0.9rem;
+          text-align: center;
+          line-height: 1.5;
+        }
+
+        /* Form Card */
+        .card {
+          background-color: #262626;
+          width: 65%;
+          padding: 40px;
+        }
+
+        h3 {
+          color: #c1ffde;
+          font-weight: 400;
+          margin-bottom: 20px;
+          text-align: center;
+        }
+
+        .form-label {
+          color: #c1ffde;
+          font-weight: 400;
+          font-size: 0.9rem;
+        }
+
+        .form-control {
+          background-color: #333333;
+          color: #ffffff;
+          border: 1px solid #4caf50;
+          border-radius: 8px;
+        }
+
+        .form-control:focus {
+          background-color: #444;
+          border-color: #81c784;
+          box-shadow: none;
+        }
+
+        .form-select {
+          background-color: #333333;
+          color: #ffffff;
+          border: 1px solid #4caf50;
+          border-radius: 8px;
+        }
+
+        .form-select:focus {
+          background-color: #444;
+          border-color: #81c784;
+          box-shadow: none;
+        }
+
+        /* Button Styling */
+        .btn-custom {
+          background-color: #0e3d3e;
+          color: #ffffff;
+          border: none;
+          width: 100%;
+          padding: 12px;
+          font-weight: 500;
+          border-radius: 8px;
+          transition: background-color 0.3s;
+        }
+
+        .btn-custom:hover {
+          background-color: #81c784;
+          color: #000;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+          .container {
+            flex-direction: column;
+            max-width: 500px;
+          }
+
+          .sidebar, .card {
+            width: 100%;
+          }
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <!-- Sidebar with Title and Description -->
+    <div class="sidebar">
+        <h2>Welcome to EventMaster</h2>
+        <p>Add a new user with ease. Please fill out the necessary information to get started on our platform.</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card">
+        <h3>Create Account</h3>
+        <form th:action="@{/admin/users}" method="post">
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" id="username" name="username" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="password" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="firstName" class="form-label">First Name</label>
+                <input type="text" id="firstName" name="firstName" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="lastName" class="form-label">Last Name</label>
+                <input type="text" id="lastName" name="lastName" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" id="email" name="email" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="phoneNumber" class="form-label">Phone Number</label>
+                <input type="text" id="phoneNumber" name="phoneNumber" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="role" class="form-label">Role</label>
+                <select id="role" name="role" class="form-select" required>
+                    <option value="" disabled selected>Select a role</option>
+                    <option value="ROLE_CITIZEN">Citizen</option>
+                    <option value="ROLE_STAFF">Police Staff</option>
+                    <option value="ROLE_ADMIN">Admin</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-custom">Register User</button>
+        </form>
+    </div>
+</div>
+</body>
+
+</html>
